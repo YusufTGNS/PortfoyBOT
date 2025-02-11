@@ -19,6 +19,7 @@ class DB_Manager:
                             description TEXT,
                             url TEXT,
                             status_id INTEGER,
+                            screen_shot TEXT,  -- Yeni sütun eklendi
                             FOREIGN KEY(status_id) REFERENCES status(status_id),
                             UNIQUE(user_id, project_name)  -- Aynı kullanıcı için aynı proje adı tekrar eklenemez
                         )''') 
@@ -71,8 +72,8 @@ class DB_Manager:
     def insert_project(self, data):
         """Yeni proje ekler."""
         sql = """INSERT OR IGNORE INTO projects 
-                  (user_id, project_name, description, url, status_id) 
-                  VALUES (?, ?, ?, ?, ?)"""
+                  (user_id, project_name, description, url, status_id, screen_shot) 
+                  VALUES (?, ?, ?, ?, ?, ?)"""  # Yeni sütun ekleniyor
         self.__executemany(sql, data)
 
     def insert_skill(self, user_id, project_name, skill):
@@ -137,7 +138,7 @@ class DB_Manager:
     def get_project_info(self, user_id, project_name):
         """Belirtilen projenin detaylarını getirir."""
         sql = """
-        SELECT project_name, description, url, status_name 
+        SELECT project_name, description, url, status_name, screen_shot
         FROM projects 
         JOIN status ON status.status_id = projects.status_id
         WHERE project_name = ? AND user_id = ?
@@ -162,6 +163,11 @@ class DB_Manager:
                   WHERE project_id = ? AND skill_id = ? """
         self.__executemany(sql, [(project_id, skill_id)])
 
+    def add_screen_shot(self, project_id, screen_shot_url):
+        """Projeye ekran görüntüsü ekler."""
+        sql = """UPDATE projects SET screen_shot = ? WHERE project_id = ?"""
+        self.__executemany(sql, [(screen_shot_url, project_id)])
+
 
 if __name__ == '__main__':
     manager = DB_Manager(DATABASE)
@@ -172,14 +178,17 @@ if __name__ == '__main__':
     
     # Örnek proje ekleme
     data = [
-        (1, "Portföy", "BETA", "https://github.com/YusufTGNS/PortfoyBOT", 1),
-        (2, "Proje B", "Başka bir açıklama", "https://ornek2.com", 2)
+        (1, "Portföy", "BETA", "https://github.com/YusufTGNS/PortfoyBOT", 1, None),  # Yeni sütun None olarak ekleniyor
+        (2, "Proje B", "Başka bir açıklama", "https://ornek2.com", 2, None)
     ]
     manager.insert_project(data)
     
     # Projeye beceri ekleme
     manager.insert_skill(1, "Portföy", "Python")
     manager.insert_skill(1, "Portföy", "SQL")
+    
+    # Ekran görüntüsü ekleme
+    manager.add_screen_shot(1, "https://prnt.sc/-KP1LUnRsyI6")
     
     # Proje bilgilerini getirme
     print(manager.get_project_info(1, "Portföy"))
