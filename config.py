@@ -1,2 +1,2 @@
-token = None
-DATABASE = "database.db"
+TOKEN = ""
+DATABASE = ""
